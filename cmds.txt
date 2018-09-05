@@ -1,0 +1,21 @@
+git subtree add -P "JAQS" https://github.com/quantOS-org/JAQS.git master; git push
+git subtree add -P "TradeSim" https://github.com/quantOS-org/TradeSim.git master; git push
+git subtree add -P "quantOSUserGuide" https://github.com/quantOS-org/quantOSUserGuide.git master; git push
+git subtree add -P "DataCore" https://github.com/quantOS-org/DataCore.git master; git push
+git subtree add -P "Terminal" https://github.com/quantOS-org/Terminal.git master; git push
+git subtree add -P "quantos_terminal" https://github.com/quantOS-org/quantos_terminal.git master; git push
+git subtree add -P "DataApi" https://github.com/quantOS-org/DataApi.git master; git push
+git subtree add -P "TradeApi" https://github.com/quantOS-org/TradeApi.git master; git push
+git subtree add -P "tushare" https://github.com/quantOS-org/tushare.git master; git push
+
+
+git subtree pull -P "JAQS" https://github.com/quantOS-org/JAQS.git master; git push
+git subtree pull -P "TradeSim" https://github.com/quantOS-org/TradeSim.git master; git push
+git subtree pull -P "quantOSUserGuide" https://github.com/quantOS-org/quantOSUserGuide.git master; git push
+git subtree pull -P "DataCore" https://github.com/quantOS-org/DataCore.git master; git push
+git subtree pull -P "Terminal" https://github.com/quantOS-org/Terminal.git master; git push
+git subtree pull -P "quantos_terminal" https://github.com/quantOS-org/quantos_terminal.git master; git push
+git subtree pull -P "DataApi" https://github.com/quantOS-org/DataApi.git master; git push
+git subtree pull -P "TradeApi" https://github.com/quantOS-org/TradeApi.git master; git push
+git subtree pull -P "tushare" https://github.com/quantOS-org/tushare.git master; git push
+
