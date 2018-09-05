@@ -172,6 +172,20 @@
                 {% endfor %}
             </table>
 
+            {% if alpha_decomposition is not none%}
+              <h2 id="alpha_decomposition">Alpha Decomposition</h2>
+                <div class="card card-body">
+                    {{ alpha_decomposition.to_html(classes="table table-striped", border=0) }}
+                </div>
+            {% endif %}
+
+            {% if industry_agg is not none%}
+              <h2 id="industry_agg">Industry Total Alpha and Overweight</h2>
+                <div class="card card-body">
+                    {{ industry_agg.to_html(classes="table table-striped", border=0) }}
+                </div>
+            {% endif %}
+
             <!-- Trading & Holding PnL -->
             <h2 id="trading_holding">Daily Trading & Holding PnL</h2>
             <p>
@@ -229,6 +243,57 @@
                 <p>This data is stored in <code>Analyzer.rebalance_positions</code></p>
             {% endif %}
 
+            <!-- Trading & Holding PnL -->
+            {% if alpha_decay_image  %}
+              <h2 id="alpha_decay">Alpha Decay</h2>
+              <p>
+                Sort the stock by average weight from top to bottom, then aggregate the alpha contribution by every 5 stocks.
+              </p>
+
+              <img src="{{alpha_decay_image}}" class="img-fluid" alt="Responsive Image">
+            {% endif %}
+
+            {% if alpha_decay_weight_image  %}
+              <h2 id="alpha_decay_weight">Alpha Decay Scaled by Weight</h2>
+              <p>
+                In each group, scale the alpha contribution by aggregate weight
+              </p>
+
+              <img src="{{alpha_decay_weight_image}}" class="img-fluid" alt="Responsive Image">
+            {% endif %}
+
+            {% if cum_alpha_weight_image  %}
+              <h2 id="cum_alpha_weight">Cumulative Alpha and Weight</h2>
+              <p>
+                Calculate cumulative weight and alpha contribution after sort the stock by average weight from top to bottom.
+              </p>
+
+              <img src="{{cum_alpha_weight_image}}" class="img-fluid" alt="Responsive Image">
+            {% endif %}
+
+            {% if industry_overweight_images %}
+              <h2 id="industry_overweight">Industry Overwight</h2>
+                {% for image in industry_overweight_images %}
+                  <img src="{{image}}" class="img-fluid" alt="Responsive Image">
+                {% endfor %}
+            {% endif %}
+
+            {% if alpha_decomposition_images %}
+              <h2 id="alpha_decomposition_images">Total Alpha Decomposition by Month</h2>
+              <img src="{{alpha_decomposition_images}}" class="img-fluid" alt="Responsive Image">
+            {% endif %}
+
+            {% if alpha_decomposition_industry_images %}
+              <h2 id="alpha_decomposition_industry_images">Industry alpha Decomposition by Month</h2>
+              <img src="{{alpha_decomposition_industry_images}}" class="img-fluid" alt="Responsive Image">
+            {% endif %}
+
+            <!--{% if average_industry_overweight is not none%}-->
+              <!--<h2 id="average_industry_overweight">Average Industry Overwwight</h2>-->
+                <!--<div class="card card-body">-->
+                    <!--{{ average_industry_overweight.to_html(classes="table table-striped", border=0) }}-->
+                <!--</div>-->
+            <!--{% endif %}-->
 
             <!-- Daily Position -->
             {% if daily_position is not none %}
