@@ -279,7 +279,7 @@ class QuantOSTdApi(object):
         
         symbols = ''
         for instcode in pf['security']:
-            if len(instcode) > 0:        
+            if len(instcode) > 0:		
                 symbols += str(instcode)
                 symbols += ","
         
@@ -291,16 +291,15 @@ class QuantOSTdApi(object):
             
             instcode = d['symbol']
             
-            symbol, jzExchange = instcode.split('.')
-            contract.symbol = symbol
+            code, jzExchange = instcode.split('.')
+            contract.symbol = instcode
             contract.exchange = exchangeMapReverse[jzExchange]
-            contract.vtSymbol = '.'.join([contract.symbol, contract.exchange])
             contract.name = d['name']
             contract.priceTick = d['pricetick']
             contract.size = d['multiplier']
             contract.lotsize = d['buylot']
             contract.productClass = productClassMapReverse.get(int(d['inst_type']), PRODUCT_UNKNOWN)
-            
+
             self.gateway.onContract(contract)
 
         # do not subscribe            
@@ -327,11 +326,11 @@ class QuantOSTdApi(object):
             tick = VtTickData()
             tick.gatewayName = self.gatewayName
             
-            instcode = d['symbol']
-            symbol, jzExchange = instcode.split('.')
+            symbol = d['symbol']
+            code, jzExchange = instcode.split('.')
             tick.symbol = symbol
             tick.exchange = exchangeMapReverse[jzExchange]
-            tick.vtSymbol = '.'.join([symbol, jzExchange])
+            tick.name = symbol
 
             tick.openPrice = d['open']
             tick.highPrice = d['high']
@@ -389,11 +388,11 @@ class QuantOSTdApi(object):
         order = VtOrderData()
         order.gatewayName = self.gatewayName
     
-        symbol, exchange = data['security'].split('.')
-        order.symbol = symbol
+        code, exchange = data['security'].split('.')
+        order.symbol = data['security']
+        order.name = data['security']
         order.exchange = exchangeMapReverse.get(exchange, EXCHANGE_UNKNOWN)
-        order.vtSymbol = '.'.join([order.symbol, order.exchange])
-    
+
         order.orderID = str(data['entrust_no'])
         order.taskID = str(data['task_id'])
         order.vtOrderID = order.orderID
@@ -422,7 +421,7 @@ class QuantOSTdApi(object):
         """"""
         task = TaskData()
         task.taskId = str(data['task_id'])
-        task.taskStatus = data['task_status']
+        task.taskStatus = data['status']
         
         event = Event(EVENT_TASK)
         event.dict_['data'] = task
@@ -435,11 +434,11 @@ class QuantOSTdApi(object):
         trade = VtTradeData()
         trade.gatewayName = self.gatewayName
         
-        symbol, jzExchange = data['security'].split('.')
-        trade.symbol = symbol
+        code, jzExchange = data['security'].split('.')
+        trade.symbol = data['security']
+        trade.name = data['security']
         trade.exchange = exchangeMapReverse.get(jzExchange, EXCHANGE_UNKNOWN)
-        trade.vtSymbol = '.'.join([trade.symbol, trade.exchange])
-        
+
         trade.direction, trade.offset = actionMapReverse.get(data['entrust_action'], (DIRECTION_UNKNOWN, OFFSET_UNKNOWN))
         
         trade.tradeID = str(data['fill_no'])
@@ -536,7 +535,7 @@ class QuantOSTdApi(object):
                     time.sleep(1)
                     self.clearAll()
                     self.loadContracts() 
-                    self.subscribePositionSymbols()    
+                    self.subscribePositionSymbols()
                     self.qryOrder()
                     self.qryTrade()
                     
@@ -597,50 +596,48 @@ class QuantOSTdApi(object):
 
         result, msg = self.api.cancel_order(cancelOrderReq.orderID)
 
-        if not check_return_error(taskid, msg):
+        if not check_return_error(result, msg):
             self.writeLog(u'撤单失败，错误信息：%s' %msg)
             
     #----------------------------------------------------------------------
     def qryPosition(self):
         """查询持仓"""
         df, msg = self.api.query_position()
-        
+		
         if not check_return_error(df, msg):
             self.writeLog(u'查询持仓失败，错误信息：%s' %msg)
             return False
-        
-        for i in range(len(df)):
-            data = df.loc[i]
 
+        for index, data in df.iterrows():
             position = VtPositionData()
             position.gatewayName = self.gatewayName
             
-            symbol, jzExchange = data.security.split('.')
-            position.symbol = symbol
+            code, jzExchange = data['security'].split('.')
+            position.symbol = data['security']
+            position.name = data['security']
             position.exchange = exchangeMapReverse.get(jzExchange, EXCHANGE_UNKNOWN)
-            position.vtSymbol = '.'.join([position.symbol, position.exchange])
-                        
-            position.direction = sideMapReverse.get(data.side, DIRECTION_UNKNOWN)
-            position.vtPositionName = '.'.join([position.vtSymbol, position.direction])
+
+            position.direction = sideMapReverse.get(data['side'], DIRECTION_UNKNOWN)
+            position.vtPositionName = '.'.join([data['security'], position.direction])
             
-            position.price = data.cost_price
-            position.ydPosition = data.pre_size
-            position.tdPosition = data.today_size
-            position.position = data.current_size
-            position.frozen = data.frozen_size
+            position.price = data['cost_price']
+            position.ydPosition = data['pre_size']
+            position.tdPosition = data['today_size']
+            position.position = data['current_size']
+            position.frozen = data['frozen_size']
             
-            position.commission = data.commission
-            position.enable = data.enable_size  
-            position.want = data.want_size
-            position.initPosition = data.init_size
-            position.trading = data.trading_pnl
-            position.holding = data.holding_pnl
-            position.last = data.last_price
+            position.commission = data['commission']
+            position.enable = data['enable_size']
+            position.want = data['want_size']
+            position.initPosition = data['init_size']
+            position.trading = data['trading_pnl']
+            position.holding = data['holding_pnl']
+            position.last = data['last_price']
             
             if (position.position > 0):
-                contract = self.gateway.dataengine.getContract(position.vtSymbol)
+                contract = self.gateway.dataengine.getContract(position.symbol)
                 if (contract != None):
-                    position.mktval = data.last_price * position.position * contract.size
+                    position.mktval = data['last_price'] * position.position * contract.size
                 else:
                     position.mktval = 0.0
         
@@ -651,29 +648,27 @@ class QuantOSTdApi(object):
     def qryAccount(self):
         
         df, msg = self.api.query_account()
-        
+		
         if not check_return_error(df, msg):
             self.writeLog(u'查询资金失败，错误信息：%s' %msg)
             return False
-        
-        for i in range(len(df)):
-            data = df.loc[i]
 
+        for index, data in df.iterrows():
             account = VtAccountData()
                 
-            account.accountID = data.id
-            account.type = data.type
-            account.vtAccountID = str(data.id) + "_" + data.type
+            account.accountID = data['id']
+            account.type = data['type']
+            account.vtAccountID = str(data['id']) + "_" + data['type']
     
-            account.frozen_balance = data.frozen_balance
-            account.enable_balance = data.enable_balance
-            account.float_pnl = data.float_pnl
-            account.init_balance = data.init_balance
-            account.deposit_balance = data.deposit_balance
-            account.holding_pnl = data.holding_pnl
-            account.close_pnl = data.close_pnl
-            account.margin = data.margin
-            account.trading_pnl = data.trading_pnl
+            account.frozen_balance = data['frozen_balance']
+            account.enable_balance = data['enable_balance']
+            account.float_pnl = data['float_pnl']
+            account.init_balance = data['init_balance']
+            account.deposit_balance = data['deposit_balance']
+            account.holding_pnl = data['holding_pnl']
+            account.close_pnl = data['close_pnl']
+            account.margin = data['margin']
+            account.trading_pnl = data['trading_pnl']
     
             self.gateway.onAccount(account)
     
@@ -685,9 +680,8 @@ class QuantOSTdApi(object):
         if not check_return_error(df, msg):
             self.writeLog(u'查询委托失败，错误信息：%s' %msg)
             return False
-        
-        for i in range(len(df)):
-            data = df.loc[i]
+
+        for index, data in df.iterrows():
             self.onOrderStatus(data)
         
         self.writeLog(u'查询委托完成')
@@ -701,9 +695,8 @@ class QuantOSTdApi(object):
         if not check_return_error(df, msg):
             self.writeLog(u'查询成交失败，错误信息：%s' %msg)
             return False
-        
-        for i in range(len(df)):
-            data = df.loc[i]
+
+        for index, data in df.iterrows():
             self.onTrade(data)
             
         self.writeLog(u'查询成交完成')
@@ -738,17 +731,17 @@ class QuantOSMdApi(object):
         self.setting = setting
         
     #----------------------------------------------------------------------
-    def onMarketData(self, key, data):    
+    def onMarketData(self, key, data):	
         """行情推送"""
         tick = VtTickData()
         tick.gatewayName = self.gatewayName
         
         try:
             l = data['symbol'].split('.')
-            tick.symbol = l[0]
+            tick.symbol = data['symbol']
+            tick.name = data['symbol']
             tick.exchange = exchangeMapReverse.get(l[1], EXCHANGE_UNKNOWN)
-            tick.vtSymbol = '.'.join([tick.symbol, tick.exchange])
-            
+
             tick.openPrice = data['open']
             tick.highPrice = data['high']
             tick.lowPrice = data['low']
@@ -834,16 +827,19 @@ class QuantOSMdApi(object):
     #----------------------------------------------------------------------
     def queryInstruments(self, instcodes):
 
-        p = "symbol=%s" %instcodes
-        df, msg = self.api.query("jz.instrumentInfo", fields="symbol, name, buylot, selllot, pricetick, multiplier, inst_type", filter=p)
+        if instcodes == "":
+            df, msg = self.api.query("jz.instrumentInfo", fields="symbol, name, buylot, selllot, pricetick, multiplier, inst_type", filter="market=SH,SZ,SHF,CZC,DCE,CFE&status=1&inst_type=1,2,3,4,5,101,102,103")
+        else:
+            p = "symbol=%s" %instcodes
+            df, msg = self.api.query("jz.instrumentInfo", fields="symbol, name, buylot, selllot, pricetick, multiplier, inst_type", filter=p)
         
         d = {}
         if df is None:
             return {}
 
-        for i in range(len(df)):
-            k = df.iloc[i]['symbol']
-            v = df.iloc[i]
+        for index, row in df.iterrows():
+            k = row['symbol']
+            v = row
             d[k] = v
         return d
 
@@ -863,20 +859,20 @@ class QuantOSMdApi(object):
             
             if (idx == item_count):
                 df, msg = self.api.quote(fields=self.fields, symbol=symbol)    
-                
-                for i in range(len(df)):
-                    k = df.iloc[i]['symbol']
-                    v = df.iloc[i]
+
+                for index, row in df.iterrows():
+                    k = row['symbol']
+                    v = row
                     d[k] = v
 
                 idx = 0
                 
         if idx>0:
             df, msg = self.api.quote(fields=self.fields, symbol=symbol)    
-            
-            for i in range(len(df)):
-                k = df.iloc[i]['symbol']
-                v = df.iloc[i]
+
+            for index, row in df.iterrows():
+                k = row['symbol']
+                v = row
                 d[k] = v
             
         return d
