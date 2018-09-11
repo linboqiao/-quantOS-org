@@ -1,0 +1,10 @@
+git subtree pull -P "JAQS" https://github.com/quantOS-org/JAQS.git master
+git subtree pull -P "TradeSim" https://github.com/quantOS-org/TradeSim.git master
+git subtree pull -P "quantOSUserGuide" https://github.com/quantOS-org/quantOSUserGuide.git master
+git subtree pull -P "DataCore" https://github.com/quantOS-org/DataCore.git master
+git subtree pull -P "Terminal" https://github.com/quantOS-org/Terminal.git master
+git subtree pull -P "quantos_terminal" https://github.com/quantOS-org/quantos_terminal.git master
+git subtree pull -P "DataApi" https://github.com/quantOS-org/DataApi.git master
+git subtree pull -P "TradeApi" https://github.com/quantOS-org/TradeApi.git master
+git subtree pull -P "tushare" https://github.com/quantOS-org/tushare.git master
+git push
